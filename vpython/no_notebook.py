@@ -261,19 +261,24 @@ class WSserver(WebSocketServerProtocol):
 
 
 try:
+    no_launch = os.environ.get("VPYTHON_NO_LAUNCH_BROWSER", False)
+    if no_launch=="0":
+        no_launch=False
     if platform.python_implementation() == 'PyPy':
         server_address = ('', 0)      # let HTTPServer choose a free port
         __server = HTTPServer(server_address, serveHTTP)
         port = __server.server_port   # get the chosen port
         # Change the global variable to store the actual port used
         __HTTP_PORT = port
-        _webbrowser.open('http://localhost:{}'.format(port)
+        if not no_launch:
+            _webbrowser.open('http://localhost:{}'.format(port)
                          )  # or webbrowser.open_new_tab()
     else:
         __server = HTTPServer(('', __HTTP_PORT), serveHTTP)
         # or webbrowser.open_new_tab()
-        if _browsertype == 'default':  # uses default browser
-            _webbrowser.open('http://localhost:{}'.format(__HTTP_PORT))
+        if not no_launch:
+            if _browsertype == 'default':  # uses default browser
+                _webbrowser.open('http://localhost:{}'.format(__HTTP_PORT))
 
 except:
     pass
