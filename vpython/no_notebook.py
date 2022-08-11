@@ -65,8 +65,10 @@ def find_free_port():
     s.bind(('', 0))  # find an available port
     return s.getsockname()[1]
 
-
-__HTTP_PORT = find_free_port()
+if "VPYTHON_HTTP_PORT" in os.environ:
+    __HTTP_PORT = int(os.environ["VPYTHON_HTTP_PORT"])
+else:
+    __HTTP_PORT = find_free_port()
 __SOCKET_PORT = find_free_port()
 
 try:
