@@ -1167,6 +1167,7 @@ class box(standardAttributes):
         args['_default_size'] = vector(1,1,1)
         args['_objName'] = "box"
         super(box, self).setup(args)
+        print ("BOX", self)
 
 class sphere(standardAttributes):
     def __init__(self, **args):
@@ -2871,6 +2872,7 @@ class canvas(baseObj):
     maxVertices = 4.2e9  ## 2^32
 
     def __init__(self, **args):
+        print ("CANVAS", args)
         baseObj._canvas_constructing = True
         if _isnotebook:
             from IPython.display import display, HTML, Javascript
