@@ -21,6 +21,8 @@ from urllib.parse import unquote
 
 from .rate_control import rate
 
+print ("IMPORT no_notebook")
+
 makeDaemonic = (platform.system() == "Windows")
 
 # Redefine `Thread.run` to not show a traceback for Spyder when stopping
@@ -111,6 +113,10 @@ websocketserving = False
 
 
 class serveHTTP(BaseHTTPRequestHandler):
+    def __init__(self, *args, **kw):
+        # print ("CLASS serveHTTP", self, args, kw)
+        super().__init__(*args, **kw)
+
     serverlib = __file__.replace('no_notebook.py', 'vpython_libraries')
     serverdata = __file__.replace('no_notebook.py', 'vpython_data')
     mimes = {'html': ['text/html', serverlib],
@@ -123,6 +129,7 @@ class serveHTTP(BaseHTTPRequestHandler):
              'ico': ['image/x-icon', serverdata]}
 
     def do_GET(self):
+        # print ("GET", self, self.path)
         global httpserving
         httpserving = True
         html = False
@@ -165,13 +172,19 @@ class serveHTTP(BaseHTTPRequestHandler):
 
 
 class WSserver(WebSocketServerProtocol):
+    def __init__(self, *args, **kw):
+        # print ("CLASS Wserver", self, args, kw)
+        super().__init__(*args, **kw)
+
     # Data sent and received must be type "bytes", so use string.encode and string.decode
     connection = None
 
     def onConnect(self, request):
+        # print ("WServer: onConnect", self, request)
         self.connection = self
 
     def onOpen(self):
+        print ("WServer: onOpen", self)
         global websocketserving
         websocketserving = True
 
@@ -183,6 +196,8 @@ class WSserver(WebSocketServerProtocol):
     # def onMessage(self, data, isBinary): # data includes canvas update, events, pick, compound
     # data includes canvas update, events, pick, compound
     async def onMessage(self, data, isBinary):
+        if data != b'trigger':  # b'trigger' just asks for updates
+            print ("Wserver onMessage", self, isBinary, data[:166])
         baseObj.handle_attach()  # attach arrow and attach trail
 
         baseObj.sent = False  # tell main thread that we're preparing to send data to browser
@@ -205,6 +220,8 @@ class WSserver(WebSocketServerProtocol):
                 objdata['attrs'][idx] = {attr: val}
         objdata = baseObj.package(objdata)
         jdata = json.dumps(objdata, separators=(',', ':')).encode('utf_8')
+        if jdata != b"{}":
+            print ("Wserver onMessage -->", jdata)
         self.sendMessage(jdata, isBinary=False)
         baseObj.sent = True
 
@@ -228,6 +245,7 @@ class WSserver(WebSocketServerProtocol):
                         pass
                     
     def onClose(self, wasClean, code, reason):
+        print ("WServer: onClose", wasClean, code, reason)
         """Called when browser tab is closed."""
         global websocketserving
 
@@ -249,15 +267,17 @@ class WSserver(WebSocketServerProtocol):
         # We want to exit, but the main thread is running.
         # Only the main thread can properly call sys.exit, so have a signal
         # handler call it on the main thread's behalf.
-        if platform.system() == 'Windows':
-            if threading.main_thread().is_alive() and not _in_spyder:
-                # On windows, if we get here then this signal won't be caught
-                # by our signal handler. Just call it ourselves.
-                os.kill(os.getpid(), signal.CTRL_C_EVENT)
-            else:
-                stop_server()
-        else:
-            os.kill(os.getpid(), signal.SIGINT)
+
+        # dbm: don't kill process
+        # if platform.system() == 'Windows':
+        #     if threading.main_thread().is_alive() and not _in_spyder:
+        #         # On windows, if we get here then this signal won't be caught
+        #         # by our signal handler. Just call it ourselves.
+        #         os.kill(os.getpid(), signal.CTRL_C_EVENT)
+        #     else:
+        #         stop_server()
+        # else:
+        #     os.kill(os.getpid(), signal.SIGINT)
 
 
 try:

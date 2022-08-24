@@ -260,6 +260,7 @@ class baseObj(object):
                 from .with_notebook import _
             else:
                 from .no_notebook import _
+            print ("BASE INIT", self, kwargs)
             baseObj._view_constructed = True
 
         self.idx = baseObj.objCnt   ## an integer
