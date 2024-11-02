@@ -832,7 +832,7 @@ class standardAttributes(baseObj):
                 self.axis = vector(value, 0, 0)
             else:
                 if self._sizing:
-                    self.axis = value*self._axis.norm() # this will set length if self._sizing
+                    self.axis = self._axis.norm() * value # this will set length if self._sizing
                 else:
                     self._size._x = value # for objects whose axis and size are not linked
         if not self._constructing:
